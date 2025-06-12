@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> 아침 이슬</title>
+  <style>
+
+    @font-face { font-family: 'Splash'; src: url('on.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+    @font-face {
+    font-family: 'Pretendard-Light';
+    src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+    html, body { width: 100%; height: 100%; font-family: 'Pretendard-Light', sans-serif; }
+    body {user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+
+    .fixed-elements { position: fixed; top: 0; left: 0; width: 20%; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 10; padding: 40px 20px; gap: 20px; }
+    .fixed-elements::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.3); z-index: -1; border-right: 1px solid rgba(255, 255, 255, 0.1); }
+    .cd-player { width: 230px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; position: relative; box-shadow: 0 40px 500px rgba(0, 0, 0, 50); border-radius: 40px; }
+    .cd-player img:first-child { width: 100%; z-index: 1; display: block; }
+    .cd-disk { position: absolute; top: 35px; left: 37px; width: 155px; height: 155px; border-radius: 50%; object-fit: contain; z-index: 2; animation: none; transform: rotate(0deg); box-shadow: none; }
+
+    .play-btn { width: 60px; height: 60px; background-color: transparent; border: none; cursor: pointer; position: relative; margin-top: 5px; }
+    .play-btn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; border-left: 18px solid white; border-top: 12px solid transparent; border-bottom: 12px solid transparent; }
+    .paused .play-btn::before, .paused .play-btn::after { content: ''; position: absolute; top: 16px; width: 10px; height: 28px; background-color: white; border-radius: 2px; }
+    .paused .play-btn::before { top: 30px; left: 20px; border: none;}
+    .paused .play-btn::after { left: 32px; }
+
+    .toggle { margin-top: 0; background: rgba(0, 0, 0, 0.4); padding: 5px; border-radius: 30px; }
+    .toggle input[type="checkbox"] { display: none; }
+    .toggle-label { display: inline-block; width: 120px; height: 50px; border-radius: 25px; position: relative; cursor: pointer; font-size: 0.9rem; font-family: 'Pretendard-Light'; color: #888; text-align: center; line-height: 50px; }
+    .toggle-label::before { content: 'Past'; position: absolute; top: 2px; left: 65px; z-index: 1; transition: left 0.3s; font-size: 0.9rem; }
+    .toggle-label::after { content: ''; width: 44px; height: 44px; background: #444; border-radius: 50%; position: absolute; top: 4.5px; left: 3px; transition: 0.3s; z-index: 2; }
+    #mode-toggle:checked + .toggle-label { color: white; }
+    #mode-toggle:checked + .toggle-label::before { content: 'Present'; top: 2px; left: 13px; font-size: 0.9rem; }
+    #mode-toggle:checked + .toggle-label::after { transform: translateX(70px); background: white; }
+
+    .wrap { width: 80%; margin-left: auto; padding-top: 200px; }
+    .title { font-family: 'Splash', cursive; font-size: 10rem; line-height: 1.1; text-align: left; margin-left: 380px; opacity: 0.9; }
+    .artist { font-family: 'Splash', cursive; font-size: 3rem; text-align: right; margin-top: -20px; padding-right: 10px; }
+    .section { margin-top: 100px; font-size: 1.2rem; line-height: 1.6; }
+    .present-content { display: none; }
+
+    body.past { color: white; }
+    body.present .past-content { display: none; }
+    body.present .present-content { display: block; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('b-7.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -2; }
+    body.past::after, body.present::after { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+    body.past::after { background-color: rgba(0, 0, 0, 0.7); }
+    body.present::after { background-color: rgba(255, 255, 255, 0.5); }
+
+    .image-section { margin: 100px 0; text-align: center; }
+    .image-section img { width: 100%; max-width: 300px; height: auto; margin: 0 auto; display: block; }
+    .image-caption { font-family: 'Splash', cursive; font-size: 3.5rem; margin-top: 20px; text-align: center; }
+    .text-left { text-align: left; padding-left: 20px; }
+    .text-right { text-align: right; padding-right: 20px; }
+
+    body.past .description-text { background-color: rgba(0, 0, 0, 0.6); color: white; }
+    body.present .description-text { background-color: rgba(255, 255, 255, 0.7); color: black; }
+
+    .description-text { font-family: 'Pretendard-Light', sans-serif; font-size: 0.9rem; line-height: 1.3; padding: 5px 20px 20px; white-space: pre-line; margin: 30px 200px; btransition: background-color 0.3s ease; }
+    .lyrics-section { margin-top: 100px; text-align: center; }
+    .lyrics-section img { width: 100%; height: auto; margin-bottom: 40px; }
+    .lyric-line { font-family: 'Splash', cursive; font-size: 1.5rem; margin-bottom: 5px; }
+    .translation-line { font-family: 'Pretendard-Light'; font-size: 1.2rem; color: #ffffff; margin-bottom: 20px; }
+
+    .small-img { width: 800%; max-width: 1200px; display: block;  padding-left: 500px; }
+
+    footer {width: 100%; text-align: center; padding: 60px 0 80px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); position: relative; -index: 2; }
+
+
+  </style>
+
+
+</head>
+<body class="past">
+  <div class="fixed-elements">
+    <div class="toggle">
+      <input type="checkbox" id="mode-toggle" onclick="toggleMode()">
+      <label class="toggle-label" for="mode-toggle"></label>
+    </div>
+    <div class="cd-player" id="cd-player">
+      <img src="cdp.png" alt="CD Player">
+      <img class="cd-disk" src="7.png" alt="CD">
+      <button id="play-button" class="play-btn" onclick="toggleAudio()"></button>
+      <audio id="audio">
+        <source src="morning.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </div>
+
+ 
+
+  <div class="wrap">
+    <div class="title"> 아침이슬 </div>
+  </div>
+
+ <div class="past-content">
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="f-7.gif" alt="Flag">
+          <div class="image-caption">1971, 한국</div>
+        </div>
+      </div>
+
+
+      <div class="wrap">
+
+        <div class="image-section">
+          <img src="7p-1.jpg" alt="Portrait">
+          <div class="image-caption">양희은</div>
+        </div>
+          <div class="description-text text-left">
+            양희은의 시작은 음악이 아니었다.  
+          </div>
+          <div class="description-text text-right">
+            그녀는 원래 방송국 PD가 되고 싶었던 대학생이었다.<br>
+            하지만 1971년, ‘아침이슬’을 우연히 부르게 되면서 한국 대중음악의 한 축이 되기 시작했다.  
+          </div>
+          <div class="description-text text-left">
+            그녀의 목소리는 맑고 단정했다.  
+            하지만 그 안에는 언제나 단단한 의지와 시대를 향한 따뜻한 질문이 담겨 있었다.  
+          </div>
+          <div class="description-text text-right">
+            그녀가 노래하는 그 꽃은 늘 광장에 피었고, 그려나 말하는 사랑은 언제나 사람을 위한 것이었다. <br>
+            양희은의 음악은 언제나 ‘개인’을 넘어 ‘우리’를 품었다.  
+          </div>
+          <div class="description-text text-left">
+            그녀는 군부정권 아래에서 ‘금지곡 가수’가 되었고, 수차례 무대에서 내려와야 했지만,<br>
+            단 한 번도 자신의 노래를 부끄러워하지 않았다.  
+          </div>
+          <div class="description-text text-right">
+            오히려 그녀는 더 낮은 자리에서, 더 많은 사람들의 마음에 말을 걸었다. <br>
+            그녀는 스타가 아닌, 시대의 ‘언니’로 기억된다.  
+          </div>
+          <div class="image-section">
+            양희은은 단순한 가수가 아니라, 시대를 노래한 목소리였다.
+          </div>
+      </div>
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="7s-1.jpg" alt="Strange Fruit - Censorship">
+          <div class="image-caption">왜 검열되었는가?</div>
+       </div>
+        <div class="description-text text-left">
+          ‘아침이슬’은 처음부터 금지곡이 아니었다.  
+        </div>
+        <div class="description-text text-right">
+          오히려 이 노래는 1970년대 초 대학생들 사이에서<br>
+          자율과 연대를 상징하는 '새로운 노래'로 자리 잡았다.  
+        </div>
+        <div class="description-text text-left">
+          그러나 1972년, 유신체제가 시작되면서 상황은 바뀌었다.<br>
+          “이제 다시 태양은 솟고…”라는 가사는 ‘민중의 각성’을 암시한다는 이유로 문제시되었고,<br>
+          정권은 이 노래를 불온한 메시지로 규정했다.  
+        </div>
+        <div class="description-text text-right">
+          결국 ‘아침이슬’은 방송 금지를 넘어 집회와 공연장에서조차 부를 수 없게 되었다.<br>
+          노래를 부른 가수 양희은 역시 블랙리스트에 오르며 무대에서 밀려났다.  
+        </div>
+        <div class="description-text text-left">
+          하지만 금지는 곧 기억이 되었고,<br>
+          기억은 저항이 되었다.  
+        </div>
+        <div class="description-text text-right">
+          1980년대, 이 노래는 대학가요제의 상징곡으로 부활했고,<br>
+          수많은 민주화 운동의 현장에서 다시 울려 퍼졌다.  
+        </div>
+        <div class="description-text text-left">
+          “아침이슬”은 더 이상 단지 한 곡의 노래가 아니라,<br>
+          검열을 이겨낸 시대의 목소리가 되었다.  
+        </div>
+        <div class="image-section">
+          그날의 금지는, 오늘의 기억이 되었다.
+        </div>
+      </div>
+
+    <div class="wrap">
+        <div class="lyrics-section">
+          <img src="7s-2.jpg" alt="Strange Fruit - Lyrics">
+          <div class="lyric-line">긴 밤 지새우고 풀잎마다 맺힌<br><br></div>
+
+          <div class="lyric-line">진주보다 더 고운 아침이슬처럼<br><br></div>
+
+          <div class="lyric-line">내 맘에 설움이 알알이 맺힐 때<br><br></div>
+
+          <div class="lyric-line">아침동산에 올라 작은 미소를 배운다<br><br></div>
+
+          <div class="lyric-line">태양은 묘지 위에 붉게 떠오르고<br><br></div>
+
+          <div class="lyric-line">한낮의 찌는 더위는 나의 시련일지라<br><br></div>
+
+          <div class="lyric-line">나 이제 가노라 저 거친 광야에<br><br></div>
+
+          <div class="lyric-line">서러움 모두 버리고 나 이제 가노라<br><br></div>
+
+          <div class="lyric-line">내 맘에 설움이 알알이 맺힐 때<br><br></div>
+
+          <div class="lyric-line">아침 동산에 올라 작은 미소를 배운다<br><br></div>
+
+          <div class="lyric-line">태양은 묘지위에 붉게 떠오르고<br><br></div>
+
+          <div class="lyric-line">한 낮에 찌는 더위는 나에 시련 일지라<br><br></div>
+
+          <div class="lyric-line">나 이제 가노라 저 거친 광야에<br><br></div>
+
+          <div class="lyric-line">서러움 모두 버리고 나 이제 가노라<br><br><br><br><br><br></div>
+        </div>
+        <img src="77.jpg">
+        <img src="7p-4.jpg" class="small-img">
+        <img src="7p-3.jpg">
+        <img src="777.jpg" class="small-img">
+      
+      </div>
+  </div>
+
+
+    <div class="present-content">
+      <div class="wrap">
+        <div class="image-section">
+          <img src="7p-2.jpg" >
+          <div class="image-caption">어떻게 기억되는가</div>
+        <div class="description-text text-left">
+          ‘아침이슬’은 한때 금지곡이었지만, 지금은 한국 대중음악사의 기념비로 남았다.  
+        </div>
+        <div class="description-text text-right">
+          1970년대, 이 노래는 대학가요제의 무대 위에서 되살아났고,<br>
+          1980년대에는 민주화운동의 현장에서 사람들의 입을 타고 퍼졌다.  
+        </div>
+        <div class="description-text text-left">
+          종교 집회에서, 노동자 투쟁에서, 촛불 시위에서—<br>
+          시대가 위태로울 때마다, ‘아침이슬’은 늘 그 중심에 있었다.  
+        </div>
+        <div class="description-text text-right">
+          단순한 가요가 아닌, 한국 근현대사의 ‘소리 없는 기록’이 되었고,<br>
+          수많은 이들에게 위로이자 다짐이자 시작이 되어주었다.  
+        </div>
+        <div class="description-text text-left">
+          오늘날 이 노래는 다시 부를 필요가 없어졌을지도 모른다.<br>
+          그러나 그 말은, 우리가 이 노래를 ‘기억해야 할 이유’가 사라졌다는 뜻은 아니다.  
+        </div>
+        <div class="description-text text-right">
+          ‘아침이슬’은 한 시대를 통과한 노래이자,<br>
+          여전히 우리 마음 어딘가에 내려앉는 이슬처럼 남아 있다.  
+        </div>
+        <div class="image-section">
+          “금지된 노래는 사라지지 않는다.  
+          그것은 더 오래 기억된다.”
+        </div>
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; margin-left: %;">
+          <iframe width="720" height="405" src="https://www.youtube.com/embed/qLg0erjLdxY?si=F9EM_8JtD2OKrtSu" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+      
+
+
+  <div class="wrap">
+    <footer>
+      © 2025 김소영. 모든 권리 보유.
+    </footer>
+  </div>
+
+
+  <script>
+    let rotation = 0;
+    let speed = 0.05;
+    let raf;
+    let isSpinning = false;
+    function rotateDisk() {
+      const disk = document.querySelector('.cd-disk');
+      rotation += speed;
+      disk.style.transform = `rotate(${rotation}deg)`;
+      if (speed < 10) speed += 0.15;
+      raf = requestAnimationFrame(rotateDisk);
+    }
+    function toggleMode() {
+      const body = document.body;
+      body.classList.toggle('past');
+      body.classList.toggle('present');
+    }
+    function toggleAudio() {
+      const audio = document.getElementById('audio');
+      const cdPlayer = document.getElementById('cd-player');
+      if (!isSpinning) {
+        audio.play();
+        rotation = 0;
+        speed = 0.05;
+        isSpinning = true;
+        rotateDisk();
+        cdPlayer.classList.add('paused');
+      } else {
+        audio.pause();
+        isSpinning = false;
+        cancelAnimationFrame(raf);
+        cdPlayer.classList.remove('paused');
+      }
+    }
+  </script>
+</body>
+</html>

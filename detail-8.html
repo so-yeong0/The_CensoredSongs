@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chimes of Freedom </title>
+  <style>
+
+    @font-face { font-family: 'Splash'; src: url('Intel.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+    @font-face {
+    font-family: 'Pretendard-Light';
+    src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+    html, body { width: 100%; height: 100%; font-family: 'Pretendard-Light', sans-serif; }
+    body {user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+
+    .fixed-elements { position: fixed; top: 0; left: 0; width: 20%; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 10; padding: 40px 20px; gap: 20px; }
+    .fixed-elements::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.3); z-index: -1; border-right: 1px solid rgba(255, 255, 255, 0.1); }
+    .cd-player { width: 230px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; position: relative; box-shadow: 0 40px 500px rgba(0, 0, 0, 50); border-radius: 40px; }
+    .cd-player img:first-child { width: 100%; z-index: 1; display: block; }
+    .cd-disk { position: absolute; top: 35px; left: 37px; width: 155px; height: 155px; border-radius: 50%; object-fit: contain; z-index: 2; animation: none; transform: rotate(0deg); box-shadow: none; }
+
+    .play-btn { width: 60px; height: 60px; background-color: transparent; border: none; cursor: pointer; position: relative; margin-top: 5px; }
+    .play-btn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; border-left: 18px solid white; border-top: 12px solid transparent; border-bottom: 12px solid transparent; }
+    .paused .play-btn::before, .paused .play-btn::after { content: ''; position: absolute; top: 16px; width: 10px; height: 28px; background-color: white; border-radius: 2px; }
+    .paused .play-btn::before { top: 30px; left: 20px; border: none;}
+    .paused .play-btn::after { left: 32px; }
+
+    .toggle { margin-top: 0; background: rgba(0, 0, 0, 0.4); padding: 5px; border-radius: 30px; }
+    .toggle input[type="checkbox"] { display: none; }
+    .toggle-label { display: inline-block; width: 120px; height: 50px; border-radius: 25px; position: relative; cursor: pointer; font-size: 0.9rem; font-family: 'Pretendard-Light'; color: #888; text-align: center; line-height: 50px; }
+    .toggle-label::before { content: 'Past'; position: absolute; top: 2px; left: 65px; z-index: 1; transition: left 0.3s; font-size: 0.9rem; }
+    .toggle-label::after { content: ''; width: 44px; height: 44px; background: #444; border-radius: 50%; position: absolute; top: 4.5px; left: 3px; transition: 0.3s; z-index: 2; }
+    #mode-toggle:checked + .toggle-label { color: white; }
+    #mode-toggle:checked + .toggle-label::before { content: 'Present'; top: 2px; left: 13px; font-size: 0.9rem; }
+    #mode-toggle:checked + .toggle-label::after { transform: translateX(70px); background: white; }
+
+    .wrap { width: 80%; margin-left: auto; padding-top: 200px; }
+    .title { font-family: 'Splash', cursive; font-size: 10rem; line-height: 1.1; text-align: left; margin-left: 100px; opacity: 0.9; }
+    .artist { font-family: 'Splash', cursive; font-size: 3rem; text-align: right; margin-top: -20px; padding-right: 10px; }
+    .section { margin-top: 100px; font-size: 1.2rem; line-height: 1.6; }
+    .present-content { display: none; }
+
+    body.past { color: white; }
+    body.present .past-content { display: none; }
+    body.present .present-content { display: block; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('b-8.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -2; }
+    body.past::after, body.present::after { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+    body.past::after { background-color: rgba(0, 0, 0, 0.7); }
+    body.present::after { background-color: rgba(255, 255, 255, 0.5); }
+
+    .image-section { margin: 100px 0; text-align: center; }
+    .image-section img { width: 100%; max-width: 300px; height: auto; margin: 0 auto; display: block; }
+    .image-caption { font-family: 'Splash', cursive; font-size: 3.5rem; margin-top: 20px; text-align: center; }
+    .text-left { text-align: left; padding-left: 20px; }
+    .text-right { text-align: right; padding-right: 20px; }
+
+    body.past .description-text { background-color: rgba(0, 0, 0, 0.6); color: white; }
+    body.present .description-text { background-color: rgba(255, 255, 255, 0.7); color: black; }
+
+    .description-text { font-family: 'Pretendard-Light', sans-serif; font-size: 0.9rem; line-height: 1.3; padding: 5px 20px 20px; white-space: pre-line; margin: 30px 200px; btransition: background-color 0.3s ease; }
+    .lyrics-section { margin-top: 100px; text-align: center; }
+    .lyrics-section img { width: 100%; height: auto; margin-bottom: 40px; }
+    .lyric-line { font-family: 'Splash', cursive; font-size: 1.5rem; margin-bottom: 5px; }
+    .translation-line { font-family: 'Pretendard-Light'; font-size: 1.2rem; color: #ffffff; margin-bottom: 20px; }
+
+    .small-img { width: 800%; max-width: 1200px; display: block;  padding-left: 700px; }
+    .small-img2 { width: 800%; max-width: 1200px; display: block;  padding-left: 300px; }
+    .big-img { width: 150%; max-width: 700px; display: block; }
+
+
+    footer {width: 100%; text-align: center; padding: 60px 0 80px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); position: relative; -index: 2; }
+
+
+  </style>
+
+
+</head>
+<body class="past">
+  <div class="fixed-elements">
+    <div class="toggle">
+      <input type="checkbox" id="mode-toggle" onclick="toggleMode()">
+      <label class="toggle-label" for="mode-toggle"></label>
+    </div>
+    <div class="cd-player" id="cd-player">
+      <img src="cdp.png" alt="CD Player">
+      <img class="cd-disk" src="8.png" alt="CD">
+      <button id="play-button" class="play-btn" onclick="toggleAudio()"></button>
+      <audio id="audio">
+        <source src="bob.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </div>
+
+ 
+
+  <div class="wrap">
+    <div class="title"> Chimes of Freedom </div>
+  </div>
+
+ <div class="past-content">
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="f-8.gif" alt="Flag">
+          <div class="image-caption">1960, America</div>
+        </div>
+      </div>
+
+
+      <div class="wrap">
+
+        <div class="image-section">
+          <img src="8p-1.jpg" alt="Portrait">
+          <div class="image-caption">Bob Dylan</div>
+        </div>
+          <div class="description-text text-left">
+            Bob Dylan은 단지 가수가 아니었다. 그는 시대를 노래한 시인이었고,<br>
+            혁명의 리듬을 만든 예언자였다.
+          </div>
+          <div class="description-text text-right">
+            1940년대 중반 미국 미네소타에서 태어난 그는 평범한 가정에서 자랐지만, 평범하게 살고 싶어 하진 않았다.<br>
+            그는 우울한 포크기타를 들고 거리로 나섰고, 곧 세상의 가장 깊은 구석을 노래하기 시작했다.
+          </div>
+          <div class="description-text text-left">
+            그는 흑인 민권 운동과 반전 시위, 젊은 세대의 분노와 질문을 노랫말 안에 집어넣었고,<br>
+            사람들은 그를 '세대의 목소리'라 불렀다.
+          </div>
+          <div class="description-text text-right">
+            하지만 딜런은 결코 하나의 진영에 머무르지 않았다.<br>
+            그는 신념을 노래했지만, 그 신념조차 끊임없이 의심했고<br>
+            대중의 기대를 거스르며 늘 새롭게 변신했다.
+          </div>
+          <div class="description-text text-left">
+            Bob Dylan은 말과 침묵, 격정과 냉소, 신념과 회의 사이를 줄타기하듯 오가며 노래했다.<br>
+            그래서 그의 음악은 이해하기 어렵지만, 이해하려는 노력 속에서 더욱 깊어진다.
+          </div>
+          <div class="description-text text-right">
+            2016년, 그는 노벨문학상을 받았다. 가수로서 처음이자 유일한 수상이었다.<br>
+            시도 아니고 소설도 아닌, ‘노래’가 문학이 될 수 있다는 사실을<br>
+            그는 자신의 전 생애로 증명했다.
+          </div>
+      </div>
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="8s-1.jpg" alt="Strange Fruit - Censorship">
+          <div class="image-caption">Why Censored?</div>
+       </div>
+        <div class="description-text text-left">
+          “Chimes of Freedom”은 종소리처럼 맑고 아름다웠지만,<br>
+          그 울림은 체제에게는 불편한 진동이었다.
+        </div>
+        <div class="description-text text-right">
+          이 노래는 억압받는 사람들, 목소리를 잃은 사람들,<br>
+          그리고 그 누구도 기억해주지 않는 존재들을 위한 헌사였다.<br>
+          그들이 자유를 찾는 여정에 종소리가 함께하길 바라는 마음이었다.
+        </div>
+        <div class="description-text text-left">
+          하지만 당시 미국은 베트남전이 막 시작되던 시기였고,<br>
+          인종차별과 계층 분리가 일상처럼 존재하던 나라였다.<br>
+          정치적 긴장은 높아졌고, 모든 ‘다른 목소리’는 의심의 대상이 되었다.
+        </div>
+        <div class="description-text text-right">
+          Bob Dylan의 가사는 시였고, 동시에 성명이었다.<br>
+          그래서 더 위험했다. ‘자유를 위한 종소리’는 곧 ‘경고의 사이렌’으로<br>
+          해석됐고, 일부 방송국은 이 노래를 금지하거나 회피했다.
+        </div>
+        <div class="description-text text-left">
+          특히 남부 지역의 라디오나 학교에서는 이 곡을 금기시했다.<br>
+          이유는 명확했다—이 노래는 약자 편에 서 있었고,<br>
+          그 약자들이 침묵하지 말라고 말하고 있었기 때문이다.
+        </div>
+        <div class="description-text text-right">
+          검열의 이유는 늘 정치가 아니라고 말하지만,<br>
+          정작 가장 먼저 지워지는 건 정치적인 노래들이다.<br>
+          Bob Dylan의 이 곡은 그런 ‘불편한 진실’이었다.
+        </div>
+      </div>
+
+    <div class="wrap">
+        <div class="lyrics-section">
+          <img src="8s-2.jpg" alt="Strange Fruit - Lyrics">
+          <div class="lyric-line">Far between sundown’s finish and midnight’s broken toll</div>
+          <div class="translation-line">해 질 녘과 자정의 부서진 종소리 사이 어딘가</div>
+
+          <div class="lyric-line">We ducked inside the doorway, thunder crashing</div>
+          <div class="translation-line">우리는 천둥 소리에 놀라 문 안으로 몸을 숨겼죠</div>
+
+          <div class="lyric-line">As majestic bells of bolts struck shadows in the sounds</div>
+          <div class="translation-line">장엄한 번개의 종소리가 소리 속 그림자를 때릴 때</div>
+
+          <div class="lyric-line">Seeming to be the chimes of freedom flashing</div>
+          <div class="translation-line">그건 자유의 종소리처럼 보였어요</div>
+
+          <div class="lyric-line">Flashing for the warriors whose strength is not to fight</div>
+          <div class="translation-line">싸우지 않는 자들의 힘을 위한 섬광이었고</div>
+
+          <div class="lyric-line">Flashing for the refugees on the unarmed road of flight</div>
+          <div class="translation-line">무장하지 못한 채 떠나는 난민들을 위한 섬광이었죠</div>
+
+          <div class="lyric-line">And for each and every underdog soldier in the night</div>
+          <div class="translation-line">그리고 밤 속에 있는 모든 언더독 병사들을 위해</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요</div>
+
+          <div class="lyric-line">Through the mad mystic hammering of the wild ripping hail</div>
+          <div class="translation-line">거칠고 찢어지는 우박의 광란 속 망치질을 뚫고</div>
+
+          <div class="lyric-line">The sky cracked its poems in naked wonder</div>
+          <div class="translation-line">하늘은 경이로움 속에 시처럼 갈라졌죠</div>
+
+          <div class="lyric-line">That the clanging of the church bells blew far into the breeze</div>
+          <div class="translation-line">교회 종소리가 바람을 타고 멀리 퍼졌고</div>
+
+          <div class="lyric-line">Leaving only bells of lightning and its thunder</div>
+          <div class="translation-line">남은 것은 번개와 천둥의 종소리뿐이었죠</div>
+
+          <div class="lyric-line">Striking for the gentle, striking for the kind</div>
+          <div class="translation-line">온유한 자들을 위해, 친절한 이들을 위해 울려 퍼졌고</div>
+
+          <div class="lyric-line">Striking for the guardians and protectors of the mind</div>
+          <div class="translation-line">정신을 지키는 수호자들을 위해 울려 퍼졌어요</div>
+
+          <div class="lyric-line">And the poet and the painter far behind his rightful time</div>
+          <div class="translation-line">자신의 시대를 앞선 시인과 화가들을 위해서도</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요</div>
+
+          <div class="lyric-line">Striking for the gentle, striking for the kind</div>
+          <div class="translation-line">온유한 자들을 위해, 친절한 이들을 위해 울려 퍼졌고</div>
+
+          <div class="lyric-line">Striking for the guardians and protectors of the mind</div>
+          <div class="translation-line">정신을 지키는 수호자들을 위해 울려 퍼졌어요</div>
+
+          <div class="lyric-line">And the poet and the painter far behind his rightful time</div>
+          <div class="translation-line">자신의 시대를 앞선 시인과 화가들을 위해서도</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요</div>
+
+          <div class="lyric-line">In the city's melted furnace, unexpectedly we watched</div>
+          <div class="translation-line">도시의 녹아내린 화로 속에서, 우리는 예상치 못하게 바라보았어요</div>
+
+          <div class="lyric-line">With faces hidden while the walls were tightening</div>
+          <div class="translation-line">얼굴을 감춘 채, 벽이 점점 좁혀오고 있었죠</div>
+
+          <div class="lyric-line">As the echo of the wedding bells before the blowin' rain</div>
+          <div class="translation-line">비바람이 몰아치기 전 울려 퍼진 결혼식 종소리처럼</div>
+
+          <div class="lyric-line">Dissolved into the bells of the lightning</div>
+          <div class="translation-line">번개의 종소리 속에 그 소리도 사라져갔죠</div>
+
+          <div class="lyric-line">Tollin' for the rebel, tollin' for the rake</div>
+          <div class="translation-line">반역자를 위해, 방탕자를 위해 종은 울리고</div>
+
+          <div class="lyric-line">Tollin' for the luckless, the abandoned and forsaked</div>
+          <div class="translation-line">불운한 자들, 버림받고 외면당한 자들을 위해 울렸어요</div>
+
+          <div class="lyric-line">Tollin' for the outcast, burnin' constantly at stake</div>
+          <div class="translation-line">화형대 위에서 계속 불타는 이단자를 위해서도</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요</div>
+
+          <div class="lyric-line">Tollin' for the searching ones on their speechless, seeking trail</div>
+          <div class="translation-line">말 없는 여정을 떠나는 구도자들을 위해 종은 울리고</div>
+
+          <div class="lyric-line">For the lonesome-hearted lovers with too personal a tale</div>
+          <div class="translation-line">너무나 개인적인 이야기를 품은 외로운 연인들을 위해</div>
+
+          <div class="lyric-line">And for each unharmful, gentle soul misplaced inside a jail</div>
+          <div class="translation-line">감옥 속에 갇힌 무고하고 온화한 영혼들을 위해서도</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요</div>
+
+          <div class="lyric-line">And for every hung-up person in the whole wide universe</div>
+          <div class="translation-line">세상의 모든 얽매인 이들을 위해</div>
+
+          <div class="lyric-line">And we gazed upon the chimes of freedom flashing</div>
+          <div class="translation-line">우리는 자유의 종소리를 바라보았어요<br><br><br><br><br><br></div>
+        </div>
+        <img src="88.jpg" class="big-img">
+        <img src="8p-4.jpg" class="small-img">
+        <img src="8p-3.jpg">
+        <img src="888.jpg" class="small-img2">
+      
+      </div>
+  </div>
+
+
+    <div class="present-content">
+      <div class="wrap">
+        <div class="image-section">
+          <img src="8p-2.jpg" >
+          <div class="image-caption">How It's Remembered</div>
+        <div class="description-text text-left">
+          ‘Chimes of Freedom’은 단순한 노래가 아니다.  
+        </div>
+        <div class="description-text text-right">
+          그것은 하나의 기도이고, 선언이며,<br>
+          억압받는 이들을 위한 시적 연대의 문장이다.  
+        </div>
+        <div class="description-text text-left">
+          이 곡이 발표된 1964년, 미국은 인종차별과 전쟁,사회적 긴장 속에서 끓고 있었다.<br>
+          딜런은 이 격동의 시대를 통과하며, 총 대신 시를 들고 저항했다.  
+        </div>
+        <div class="description-text text-right">
+          그는 정치적 구호를 외치지 않았다. <br> 
+          대신 비를 맞는 연인, 감옥에 갇힌 사람, 침묵 속에서 길을 잃은 자들의 이야기를 자유의 종소리에 실어 전했다.  
+        </div>
+        <div class="description-text text-left">
+          그래서 이 노래는 시대의 경계선을 넘어<br>
+          언제나 새로운 억압과 싸우는 이들에게 다시 울리는 종소리가 되었다.  
+        </div>
+        <div class="description-text text-right">
+          ‘Chimes of Freedom’은 ‘누구의 자유인가?’라는 질문 대신<br> 
+          ‘누구의 자유를 위해 울려야 하는가?’를 묻는다. <br> 
+          그리고 그 질문은 오늘도 여전히 유효하다.  
+        </div>
+        <div class="image-section">
+          “자유는 누구에게나 울려야 한다.”
+        </div>
+
+          <iframe
+            src="https://archive.org/embed/ChimesOfFreedom"
+            width="100%" height="60"
+            frameborder="0"
+            allowfullscreen>
+          </iframe>
+          <div style="text-align:center; margin-top:10px;">
+            <a href="https://vimeo.com/333172111" target="_blank"
+               style="display:inline-block;padding:12px 20px;
+                      background:#444;color:white;border-radius:4px;
+                      text-decoration:none;font-weight:bold;">
+              ▶ 라이브 영상으로 보기 (Vimeo)
+            </a>
+          </div>
+        
+      </div>
+    </div>
+
+      
+
+
+  <div class="wrap">
+    <footer>
+      © 2025 김소영. 모든 권리 보유.
+    </footer>
+  </div>
+
+
+  <script>
+    let rotation = 0;
+    let speed = 0.05;
+    let raf;
+    let isSpinning = false;
+    function rotateDisk() {
+      const disk = document.querySelector('.cd-disk');
+      rotation += speed;
+      disk.style.transform = `rotate(${rotation}deg)`;
+      if (speed < 10) speed += 0.15;
+      raf = requestAnimationFrame(rotateDisk);
+    }
+    function toggleMode() {
+      const body = document.body;
+      body.classList.toggle('past');
+      body.classList.toggle('present');
+    }
+    function toggleAudio() {
+      const audio = document.getElementById('audio');
+      const cdPlayer = document.getElementById('cd-player');
+      if (!isSpinning) {
+        audio.play();
+        rotation = 0;
+        speed = 0.05;
+        isSpinning = true;
+        rotateDisk();
+        cdPlayer.classList.add('paused');
+      } else {
+        audio.pause();
+        isSpinning = false;
+        cancelAnimationFrame(raf);
+        cdPlayer.classList.remove('paused');
+      }
+    }
+  </script>
+</body>
+</html>
