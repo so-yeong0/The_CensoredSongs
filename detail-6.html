@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> Another Brick in the Wall (Part 2) </title>
+  <style>
+
+    @font-face { font-family: 'Splash'; src: url('Kids.ttf') format('truetype'); font-weight: normal; font-style: normal; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+    @font-face {
+    font-family: 'Pretendard-Light';
+    src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+    html, body { width: 100%; height: 100%; font-family: 'Pretendard-Light', sans-serif; }
+    body {user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+
+    .fixed-elements { position: fixed; top: 0; left: 0; width: 20%; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 10; padding: 40px 20px; gap: 20px; }
+    .fixed-elements::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.3); z-index: -1; border-right: 1px solid rgba(255, 255, 255, 0.1); }
+    .cd-player { width: 230px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; position: relative; box-shadow: 0 40px 500px rgba(0, 0, 0, 50); border-radius: 40px; }
+    .cd-player img:first-child { width: 100%; z-index: 1; display: block; }
+    .cd-disk { position: absolute; top: 35px; left: 37px; width: 155px; height: 155px; border-radius: 50%; object-fit: contain; z-index: 2; animation: none; transform: rotate(0deg); box-shadow: none; }
+
+    .play-btn { width: 60px; height: 60px; background-color: transparent; border: none; cursor: pointer; position: relative; margin-top: 5px; }
+    .play-btn::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 0; height: 0; border-left: 18px solid white; border-top: 12px solid transparent; border-bottom: 12px solid transparent; }
+    .paused .play-btn::before, .paused .play-btn::after { content: ''; position: absolute; top: 16px; width: 10px; height: 28px; background-color: white; border-radius: 2px; }
+    .paused .play-btn::before { top: 30px; left: 20px; border: none;}
+    .paused .play-btn::after { left: 32px; }
+
+    .toggle { margin-top: 0; background: rgba(0, 0, 0, 0.4); padding: 5px; border-radius: 30px; }
+    .toggle input[type="checkbox"] { display: none; }
+    .toggle-label { display: inline-block; width: 120px; height: 50px; border-radius: 25px; position: relative; cursor: pointer; font-size: 0.9rem; font-family: 'Pretendard-Light'; color: #888; text-align: center; line-height: 50px; }
+    .toggle-label::before { content: 'Past'; position: absolute; top: 2px; left: 65px; z-index: 1; transition: left 0.3s; font-size: 0.9rem; }
+    .toggle-label::after { content: ''; width: 44px; height: 44px; background: #444; border-radius: 50%; position: absolute; top: 4.5px; left: 3px; transition: 0.3s; z-index: 2; }
+    #mode-toggle:checked + .toggle-label { color: white; }
+    #mode-toggle:checked + .toggle-label::before { content: 'Present'; top: 2px; left: 13px; font-size: 0.9rem; }
+    #mode-toggle:checked + .toggle-label::after { transform: translateX(70px); background: white; }
+
+    .wrap { width: 80%; margin-left: auto; padding-top: 200px; }
+    .title { font-family: 'Splash', cursive; font-size: 9rem; line-height: 1.1; text-align: left; margin-left: 100px; opacity: 0.99; }
+     .title2 { font-family: 'Splash', cursive; font-size: 4rem; line-height: 1.1; text-align: left; margin-left: 100px; opacity: 0.9; }
+    .artist { font-family: 'Splash', cursive; font-size: 3rem; text-align: right; margin-top: -20px; padding-right: 10px; }
+    .section { margin-top: 100px; font-size: 1.2rem; line-height: 1.6; }
+    .present-content { display: none; }
+
+    body.past { color: white; }
+    body.present .past-content { display: none; }
+    body.present .present-content { display: block; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('b-6.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; z-index: -2; }
+    body.past::after, body.present::after { content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+    body.past::after { background-color: rgba(0, 0, 0, 0.7); }
+    body.present::after { background-color: rgba(255, 255, 255, 0.5); }
+
+    .image-section { margin: 100px 0; text-align: center; }
+    .image-section img { width: 100%; max-width: 300px; height: auto; margin: 0 auto; display: block; }
+    .image-caption { font-family: 'Splash', cursive; font-size: 3.5rem; margin-top: 20px; text-align: center; }
+    .text-left { text-align: left; padding-left: 20px; }
+    .text-right { text-align: right; padding-right: 20px; }
+
+
+    body.past .description-text { background-color: rgba(0, 0, 0, 0.6); color: white; }
+    body.present .description-text { background-color: rgba(255, 255, 255, 0.7); color: black; }
+
+    .description-text { font-family: 'Pretendard-Light', sans-serif; font-size: 0.9rem; line-height: 1.3; padding: 5px 20px 20px; white-space: pre-line; margin: 30px 200px; btransition: background-color 0.3s ease; }
+    .lyrics-section { margin-top: 100px; text-align: center; }
+    .lyrics-section img { width: 100%; height: auto; margin-bottom: 40px; }
+    .lyric-line { font-family: 'Splash', cursive; font-size: 1.5rem; margin-bottom: 5px; }
+    .translation-line { font-family: 'Pretendard-Light'; font-size: 1.2rem; color: #ffffff; margin-bottom: 20px; }
+
+    .small-img { width: 800%; max-width: 1200px; display: block;  padding-left: 500px; }
+    .big-img { width: 150%; max-width: 700px; display: block; }
+
+    footer {width: 100%; text-align: center; padding: 60px 0 80px; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); position: relative; -index: 2; }
+
+
+  </style>
+
+
+</head>
+<body class="past">
+  <div class="fixed-elements">
+    <div class="toggle">
+      <input type="checkbox" id="mode-toggle" onclick="toggleMode()">
+      <label class="toggle-label" for="mode-toggle"></label>
+    </div>
+    <div class="cd-player" id="cd-player">
+      <img src="cdp.png" alt="CD Player">
+      <img class="cd-disk" src="6.png" alt="CD">
+      <button id="play-button" class="play-btn" onclick="toggleAudio()"></button>
+      <audio id="audio">
+        <source src="Brick.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </div>
+
+ 
+
+  <div class="wrap">
+    <div class="title"> Another Brick<br>in the Wall</div>
+    <div class="title2"> (Part 2) </div>
+  </div>
+
+ <div class="past-content">
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="f-6.gif" alt="Flag">
+          <div class="image-caption">1980, South Africa</div>
+        </div>
+      </div>
+
+
+      <div class="wrap">
+
+        <div class="image-section">
+          <img src="6p-1.jpg" alt="Portrait">
+          <div class="image-caption">Pink Floyd</div>
+        </div>
+          <div class="description-text text-left">
+            Pink Floyd는 음악 그 이상의 경험을 창조한 밴드였다.<br>
+            그들은 단지 노래를 부르지 않았고, 시대를 건드렸다.
+          </div>
+          <div class="description-text text-right">
+            1960년대 말, 싸이키델릭 록에서 출발한 그들은 철학적이고 구조적인 사운드로 변모해 갔다.<br>
+            스튜디오 기술과 시각예술, 정치적 메시지를 결합해 하나의 세계를 만들어내는 존재가 되었다.
+          </div>
+          <div class="description-text text-left">
+            그 중심에는 Roger Waters가 있었다.<br>
+            그는 냉소와 불안, 고독과 분노를 단어로 녹여냈고, 그 감정은 음악을 타고 사람들의 마음을 파고들었다.
+          </div>
+          <div class="description-text text-right">
+            Pink Floyd의 음악은 자본주의, 전쟁, 억압, 인간소외 같은 묵직한 주제들을 다뤘다.<br>
+            하지만 그 방식은 격렬하기보단 절제되고 섬세했으며, 어둠 속에서 빛을 건져 올리는 방식이었다.
+          </div>
+          <div class="description-text text-left">
+            그들의 앨범 <i>The Wall</i>은 한 인간이 사회적 억압 속에서 점점 벽을 쌓아가는 서사이다.<br>
+            그리고 그 벽의 한 조각, 바로 “Another Brick in the Wall”은 체제에 눌린 목소리를 대변했다.
+          </div>
+          <div class="description-text text-right">
+            Pink Floyd는 단지 전설적인 밴드가 아니라, 시대와 싸운 예술가들이었다.<br>
+            그들의 음악은 여전히 귓가에 남아, 지금 우리에게 묻는다.<br>
+            “당신은 어떤 벽을 쌓고 있나요?”
+          </div>
+      </div>
+
+      <div class="wrap">
+        <div class="image-section">
+          <img src="6s-1.jpg">
+          <div class="image-caption">Why Censored?</div>
+       </div>
+        <div class="description-text text-left">
+          이 노래는 영국의 교육 시스템에 대한 분노에서 시작되었다.<br>
+          권위적인 학교, 체벌과 억압, 생각하지 못하게 만드는 암기식 교육.<br>
+          아이들은 개성이 아닌 복종을 배웠고, 교사는 감정을 가르치지 않았다.
+        </div>
+        <div class="description-text text-right">
+          “We don't need no education”이라는 가사는 단순한 반항이 아니라, 아이들의 외침이었다.<br>
+          그들은 더 이상 기계가 되고 싶지 않았다.
+        </div>
+        <div class="description-text text-left">
+          하지만 이 노래가 진짜 검열을 당한 곳은 영국이 아니라<br>
+          지구 반대편, 남아프리카공화국이었다.
+        </div>
+        <div class="description-text text-right">
+          1980년, 인종차별 정책 아래 고통받던 흑인 학생들은 이 노래를 ‘저항의 찬가’처럼 외치며 거리로 나섰다.<br>
+          그들의 입에서 “No education, no thought control”이 울려 퍼졌고, 정부는 그 위협을 감지했다.
+        </div>
+        <div class="description-text text-left">
+          아파르트헤이트 정권은 곧바로 이 노래의 방송을 금지하고, 유통을 막았다. <br>
+          노래 한 곡이, 정권을 불안하게 만든 것이다.
+        </div>
+        <div class="description-text text-right">
+          아이러니하게도, 억압적인 교육 시스템을 비판한 노래는 또 다른 억압 정권의 두려움이 되었다.<br>
+          그리고 그렇게, 이 노래는 영국에서 시작해 세계로 확장된 저항이 되었다.
+        </div>
+      </div>
+
+    <div class="wrap">
+        <div class="lyrics-section">
+          <img src="6s-2.jpg" alt="Strange Fruit - Lyrics">
+          <div class="lyric-line">We don't need no education</div>
+          <div class="translation-line">우리는 교육 같은 건 필요 없어</div>
+
+          <div class="lyric-line">We don't need no thought control</div>
+          <div class="translation-line">우리는 생각의 통제도 바라지 않아</div>
+
+          <div class="lyric-line">No dark sarcasm in the classroom</div>
+          <div class="translation-line">교실 안에서 비꼬는 말도 듣고싶지 않아</div>
+
+          <div class="lyric-line">Teacher, leave them kids alone</div>
+          <div class="translation-line">선생, 아이들을 좀 내버려 둬</div>
+
+          <div class="lyric-line">Hey, teacher, leave them kids alone!</div>
+          <div class="translation-line">이봐, 선생, 아이들을 좀 내버려 둬!</div>
+
+          <div class="lyric-line">All in all it's just another brick in the wall</div>
+          <div class="translation-line">이것도 결국 벽 속의 또다른 벽돌일 뿐</div>
+
+          <div class="lyric-line">All in all you're just another brick in the wall</div>
+          <div class="translation-line">당신 또한 결국 벽 속의 또다른 벽돌일 뿐</div>
+
+          <div class="lyric-line"><i>We don't need no education</i></div>
+          <div class="translation-line"><i>우리는 교육을 필요로 하지 않아요</i></div>
+
+          <div class="lyric-line"><i>We don't need no thought control</i></div>
+          <div class="translation-line"><i>우리는 생각의 통제도 원하지 않아요</i></div>
+
+          <div class="lyric-line"><i>No dark sarcasm in the classroom</i></div>
+          <div class="translation-line"><i>교실 안에서 비꼬는 말도 듣고 싶지 않아요</i></div>
+
+          <div class="lyric-line"><i>Teacher, leave us kids alone</i></div>
+          <div class="translation-line"><i>선생님, 우리들을 좀 내버려 둬요</i></div>
+
+          <div class="lyric-line"><i>Hey, teacher, leave us kids alone!</i></div>
+          <div class="translation-line"><i>이봐요, 선생님, 우리들을 좀 내버려 둬요!</i></div>
+
+          <div class="lyric-line"><i>All in all it's just another brick in the wall</i></div>
+          <div class="translation-line"><i>이것도 결국 벽 속의 또다른 벽돌일 뿐</i></div>
+
+          <div class="lyric-line"><i>All in all you're just another brick in the wall</i></div>
+          <div class="translation-line"><i>당신 또한 결국 벽 속의 또다른 벽돌일 뿐</i></div>
+
+          <div class="lyric-line"><i>"Wrong, do it again!"</i></div>
+          <div class="translation-line"><i>"틀렸어, 다시 해!"</i></div>
+
+          <div class="lyric-line"><i>"If you don't eat yer meat, you can't have any pudding!"</i></div>
+          <div class="translation-line"><i>"고기를 안 먹으면, 푸딩도 못 먹는다!"</i></div>
+
+          <div class="lyric-line"><i>"How can you have any pudding if you don't eat yer meat?"</i></div>
+          <div class="translation-line"><i>"고기를 먹지 않고서 어떻게 푸딩을 먹을 수 있겠어?"</i></div>
+
+          <div class="lyric-line"><i>"You! yes, you behind the bikesheds! Stand still, laddy!"</i></div>
+          <div class="translation-line"><i>"너! 그래, 자전거 창고 뒤에 너! 거기 그대로 서 있어, 이놈!"<br><br><br><br><br><br></div>
+        </div>
+        <img src="6p-3.jpg" class="big-img">
+        <img src="66.jpg" class="small-img">
+        <img src="6p-4.jpg">
+        <img src="666.jpg">
+      
+      </div>
+  </div>
+
+
+    <div class="present-content">
+      <div class="wrap">
+
+        <div class="image-section">
+          <img src="6p-2.jpg" >
+          <div class="image-caption">How It's Remembered</div>
+     
+        <div class="description-text text-left">
+          이 노래는 단지 한 곡이 아니라, 한 세대의 분노였다.<br>
+          억압적인 교육, 복종을 강요하는 사회, 감정을 금지한 교실.<br>
+          “Another Brick in the Wall”은 그 모든 벽에 균열을 냈다.
+        </div>
+        <div class="description-text text-right">
+          많은 이들은 처음엔 이 노래가 교육 자체를 거부한다고 오해했지만,<br>
+          시간이 흐를수록 사람들은 알게 되었다.<br>
+          이 곡은 ‘무지’가 아닌, ‘생각 없는 교육’에 대한 저항이었다는 것을.
+        </div>
+        <div class="description-text text-left">
+          남아프리카공화국에서는 이 노래가 학생들의 시위 구호가 되었고,<br>
+          세계 곳곳의 억압받는 이들에게는 저항의 상징이 되었다.
+        </div>
+        <div class="description-text text-right">
+          그리고 지금, 우리는 여전히 이 노래를 듣는다.<br>
+          아이들이 감정을 숨기지 않고, 질문하는 법을 배울 수 있도록.<br>
+          교육이 더 이상 또 다른 벽돌이 되지 않도록.
+        </div>
+        <div class="image-section">
+          “All in all, it’s just another brick in the wall.”
+        </div>
+         <div style="position: relative; padding-bottom: 56.25%; height: 0; margin-left: %;">
+          <iframe 
+  src="https://archive.org/embed/pink-floyd-another-brick-in-the-wall-hq" 
+  width="720" height="405" 
+  frameborder="0" 
+  webkitallowfullscreen="true" 
+  mozallowfullscreen="true" 
+  allowfullscreen>
+</iframe>
+        </div>
+      </div>
+    </div>
+
+      
+
+
+  <div class="wrap">
+    <footer>
+      © 2025 김소영. 모든 권리 보유.
+    </footer>
+  </div>
+
+
+  <script>
+    let rotation = 0;
+    let speed = 0.05;
+    let raf;
+    let isSpinning = false;
+    function rotateDisk() {
+      const disk = document.querySelector('.cd-disk');
+      rotation += speed;
+      disk.style.transform = `rotate(${rotation}deg)`;
+      if (speed < 10) speed += 0.15;
+      raf = requestAnimationFrame(rotateDisk);
+    }
+    function toggleMode() {
+      const body = document.body;
+      body.classList.toggle('past');
+      body.classList.toggle('present');
+    }
+    function toggleAudio() {
+      const audio = document.getElementById('audio');
+      const cdPlayer = document.getElementById('cd-player');
+      if (!isSpinning) {
+        audio.play();
+        rotation = 0;
+        speed = 0.05;
+        isSpinning = true;
+        rotateDisk();
+        cdPlayer.classList.add('paused');
+      } else {
+        audio.pause();
+        isSpinning = false;
+        cancelAnimationFrame(raf);
+        cdPlayer.classList.remove('paused');
+      }
+    }
+  </script>
+</body>
+</html>
